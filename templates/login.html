@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Bottle Fall Vision (Geist Console)</title>
+  
+  <!-- Geist Fonts via Vercel CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/fonts/geist-sans/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/fonts/geist-mono/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      /* Vercel Geist Color Tokens from Design.md */
+      --primary: #171717;
+      --on-primary: #ffffff;
+      --ink: #171717;
+      --body: #4d4d4d;
+      --mute: #8f8f8f;
+      --faint: #a1a1a1;
+      --hairline: #ebebeb;
+      --hairline-soft: #f2f2f2;
+      --canvas: #fafafa;
+      --canvas-elevated: #ffffff;
+      --link: #0070f3;
+      --error: #ee0000;
+      --error-soft: #fff5f5;
+      --success: #10b981;
+      --rounded-sm: 6px;
+      --rounded-md: 12px;
+      --rounded-pill: 100px;
+      --font-geist: "Geist Sans", "Geist", "Inter", -apple-system, sans-serif;
+      --font-mono: "Geist Mono", "JetBrains Mono", monospace;
+      --shadow-whisper: 0px 1px 2px rgba(0, 0, 0, 0.04);
+      --shadow-card: 0px 8px 30px rgba(0, 0, 0, 0.06);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--canvas);
+      color: var(--body);
+      font-family: var(--font-geist);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Ambient Hero Mesh Gradient Bloom (Confined to Top Center per Design.md) */
+    .mesh-gradient-bloom {
+      position: fixed;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 300px;
+      background: radial-gradient(circle at 50% 0%, rgba(0, 124, 240, 0.08) 0%, rgba(121, 40, 202, 0.06) 40%, rgba(255, 0, 128, 0.03) 70%, transparent 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 400px;
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .brand-header {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .vercel-triangle {
+      width: 32px;
+      height: 32px;
+      color: var(--ink);
+    }
+
+    .login-heading {
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: -0.8px;
+      color: var(--ink);
+      line-height: 1.2;
+    }
+
+    .login-subheading {
+      font-size: 13.5px;
+      color: var(--mute);
+    }
+
+    /* Auth Card */
+    .auth-card {
+      background: var(--canvas-elevated);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-md);
+      padding: 28px 24px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+
+    .input-field {
+      width: 100%;
+      background: var(--canvas-elevated);
+      color: var(--ink);
+      border: 1px solid var(--hairline);
+      font-family: var(--font-geist);
+      font-size: 14px;
+      padding: 9px 12px;
+      border-radius: var(--rounded-sm);
+      outline: none;
+      transition: border-color 140ms ease;
+    }
+
+    .input-field:focus {
+      border-color: var(--ink);
+    }
+
+    .btn-submit {
+      width: 100%;
+      height: 40px;
+      background: var(--primary);
+      color: var(--on-primary);
+      font-family: var(--font-geist);
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: var(--rounded-pill);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 120ms ease;
+      margin-top: 4px;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      background: #000000;
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .alert-banner {
+      background: var(--error-soft);
+      border: 1px solid rgba(238, 0, 0, 0.2);
+      color: var(--error);
+      font-size: 12.5px;
+      padding: 10px 12px;
+      border-radius: var(--rounded-sm);
+      display: none;
+    }
+
+    /* Hint Box for demo accounts */
+    .role-hints {
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-sm);
+      background: var(--canvas);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .role-hint-header {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--mute);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .hint-pill-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .hint-btn {
+      flex: 1;
+      padding: 6px 8px;
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-sm);
+      background: var(--canvas-elevated);
+      color: var(--ink);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.3;
+      transition: all 120ms ease;
+    }
+
+    .hint-btn:hover {
+      border-color: var(--ink);
+      background: #fff;
+    }
+
+    .hint-role {
+      font-weight: 600;
+      font-size: 11px;
+    }
+
+    .hint-cred {
+      color: var(--mute);
+      font-size: 10px;
+    }
+
+    .footer-note {
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--mute);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Subtle mesh gradient bloom per Design.md -->
+  <div class="mesh-gradient-bloom"></div>
+
+  <div class="login-container">
+    <div class="brand-header">
+      <svg class="vercel-triangle" viewBox="0 0 76 65" fill="currentColor">
+        <path d="M37.5274 0L75.0548 65H0L37.5274 0Z" />
+      </svg>
+      <h1 class="login-heading">Bottle Fall Vision</h1>
+      <p class="login-subheading">Masuk untuk mengakses konsol deteksi & monitoring</p>
+    </div>
+
+    <!-- Login Form Card -->
+    <div class="auth-card">
+      <div id="error-box" class="alert-banner"></div>
+
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label for="username">Nama Pengguna (Username)</label>
+          <input id="username" type="text" class="input-field" placeholder="admin atau operator" required autocomplete="username">
+        </div>
+
+        <div class="form-group" style="margin-top: 12px;">
+          <label for="password">Kata Sandi (Password)</label>
+          <input id="password" type="password" class="input-field" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+
+        <button type="submit" id="btn-login" class="btn-submit" style="margin-top: 18px;">
+          Masuk ke Konsol
+        </button>
+      </form>
+
+      <!-- Demo Accounts Quick Click -->
+      <div class="role-hints">
+        <div class="role-hint-header">Akun Demo Cepat:</div>
+        <div class="hint-pill-row">
+          <button type="button" class="hint-btn" onclick="fillCreds('admin', 'admin123')">
+            <span class="hint-role">Administrator</span>
+            <span class="hint-cred">admin / admin123</span>
+          </button>
+          <button type="button" class="hint-btn" onclick="fillCreds('operator', 'operator123')">
+            <span class="hint-role">Operator</span>
+            <span class="hint-cred">operator / operator123</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      Bottle Fall Detection System &middot; Vercel Geist Architecture
+    </div>
+  </div>
+
+  <script>
+    function fillCreds(u, p) {
+      document.getElementById('username').value = u;
+      document.getElementById('password').value = p;
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('username').value.trim();
+      const p = document.getElementById('password').value;
+      const btn = document.getElementById('btn-login');
+      const err = document.getElementById('error-box');
+
+      err.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Memverifikasi...';
+
+      fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: u, password: p })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.ok) {
+          window.location.href = '/';
+        } else {
+          err.textContent = data.message || 'Username atau password salah.';
+          err.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = 'Masuk ke Konsol';
+        }
+      })
+      .catch(() => {
+        err.textContent = 'Terjadi kesalahan jaringan.';
+        err.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Masuk ke Konsol';
+      });
+    }
+  </script>
+</body>
+</html>

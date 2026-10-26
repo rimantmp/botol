@@ -1,0 +1,7 @@
+# Bottle fine-tune dataset (single class: bottle)
+# Train: v2 video frames (72) | Val: v1 video frames (50) - held-out drop event
+path: dataset
+train: images/train
+val: images/val
+names:
+  0: bottle

@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bottle Fall Detection System — Vercel Geist Console</title>
+  
+  <!-- Geist Fonts via Vercel CDN with Inter & JetBrains Mono Fallbacks -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/fonts/geist-sans/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/fonts/geist-mono/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      /* Vercel Geist Color Tokens from Design.md */
+      --primary: #171717;
+      --on-primary: #ffffff;
+      --ink: #171717;
+      --body: #4d4d4d;
+      --mute: #8f8f8f;
+      --faint: #a1a1a1;
+      --hairline: #ebebeb;
+      --hairline-soft: #f2f2f2;
+      --canvas: #fafafa;
+      --canvas-elevated: #ffffff;
+      --link: #0070f3;
+      --link-deep: #0761d1;
+      --link-soft: #d3e5ff;
+      --error: #ee0000;
+      --error-deep: #c50000;
+      --warning: #f5a623;
+      --warning-soft: #ffefcf;
+      --warning-deep: #ab570a;
+      --success: #10b981;
+      --success-soft: #d1fae5;
+
+      /* Radii */
+      --rounded-none: 0px;
+      --rounded-sm: 6px;
+      --rounded-md: 12px;
+      --rounded-lg: 16px;
+      --rounded-pill-category: 64px;
+      --rounded-pill: 100px;
+      --rounded-full: 9999px;
+
+      /* Typography */
+      --font-geist: "Geist Sans", "Geist", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: "Geist Mono", "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+      /* Shadows */
+      --shadow-whisper: 0px 1px 2px rgba(0, 0, 0, 0.04);
+      --shadow-floating: 0px 2px 4px rgba(0, 0, 0, 0.02), 0px 8px 16px -4px rgba(0, 0, 0, 0.04);
+      --shadow-modal: 0px 14px 34px -4px rgba(0, 0, 0, 0.12), 0px 4px 12px rgba(0, 0, 0, 0.04);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--canvas);
+      color: var(--body);
+      font-family: var(--font-geist);
+      font-size: 14px;
+      line-height: 20px;
+      min-height: 100vh;
+      display: flex;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ---------------------------------------------------- SIDEBAR */
+    aside.sidebar {
+      width: 256px;
+      background: var(--canvas-elevated);
+      border-right: 1px solid var(--hairline);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .sidebar-brand {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--hairline);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .vercel-triangle {
+      width: 20px;
+      height: 20px;
+      color: var(--ink);
+    }
+
+    .brand-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: -0.3px;
+    }
+
+    .version-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      background: var(--hairline-soft);
+      border: 1px solid var(--hairline);
+      padding: 2px 6px;
+      border-radius: var(--rounded-sm);
+      color: var(--mute);
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 12px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .nav-section-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--mute);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0 8px 6px;
+    }
+
+    .nav-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .nav-item-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: var(--rounded-sm);
+      font-size: 13.5px;
+      font-weight: 400;
+      color: var(--body);
+      background: transparent;
+      border: 1px solid transparent;
+      cursor: pointer;
+      text-align: left;
+      transition: background 120ms ease, color 120ms ease;
+    }
+
+    .nav-item-btn:hover {
+      background: var(--hairline-soft);
+      color: var(--ink);
+    }
+
+    .nav-item-btn.active {
+      background: var(--hairline-soft);
+      color: var(--ink);
+      font-weight: 500;
+      border-color: var(--hairline);
+    }
+
+    .nav-item-btn svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+    }
+
+    .admin-pill-badge {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: #000;
+      color: #fff;
+    }
+
+    .sidebar-footer {
+      padding: 14px 16px;
+      border-top: 1px solid var(--hairline);
+      background: var(--canvas);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .user-profile-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .user-avatar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .user-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--rounded-full);
+      background: var(--ink);
+      color: var(--on-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .user-info-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+
+    .user-name {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+
+    .user-role-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--mute);
+    }
+
+    .signout-btn {
+      width: 100%;
+      padding: 6px 10px;
+      border-radius: var(--rounded-sm);
+      border: 1px solid var(--hairline);
+      background: var(--canvas-elevated);
+      font-family: var(--font-geist);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--mute);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 120ms ease;
+    }
+
+    .signout-btn:hover {
+      background: #fff5f5;
+      color: var(--error);
+      border-color: rgba(238, 0, 0, 0.25);
+    }
+
+    /* ---------------------------------------------------- MAIN WRAPPER */
+    .app-viewport {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: var(--canvas);
+    }
+
+    /* Top Bar */
+    header.top-app-bar {
+      height: 54px;
+      background: var(--canvas-elevated);
+      border-bottom: 1px solid var(--hairline);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .breadcrumb-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13.5px;
+    }
+
+    .breadcrumb-root {
+      color: var(--mute);
+    }
+
+    .breadcrumb-divider {
+      color: var(--hairline);
+    }
+
+    .breadcrumb-current {
+      font-weight: 500;
+      color: var(--ink);
+    }
+
+    .top-telemetry-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .telemetry-chip {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 4px 8px;
+      border-radius: var(--rounded-sm);
+      border: 1px solid var(--hairline);
+      background: var(--canvas);
+      color: var(--body);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chip-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--mute);
+    }
+
+    .telemetry-chip.status-running {
+      border-color: rgba(16, 185, 129, 0.3);
+      color: #047857;
+      background: var(--success-soft);
+    }
+    .telemetry-chip.status-running .chip-dot { background: #059669; }
+
+    /* Buttons from Design.md */
+    .btn-pill-primary {
+      background: var(--primary);
+      color: var(--on-primary);
+      font-family: var(--font-geist);
+      font-size: 13.5px;
+      font-weight: 500;
+      border-radius: var(--rounded-pill);
+      padding: 0 16px;
+      height: 34px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 120ms ease;
+    }
+
+    .btn-pill-primary:hover:not(:disabled) {
+      background: #000000;
+    }
+
+    .btn-square-ghost {
+      background: var(--canvas-elevated);
+      color: var(--ink);
+      font-family: var(--font-geist);
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: var(--rounded-sm);
+      border: 1px solid var(--hairline);
+      padding: 0 12px;
+      height: 34px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 120ms ease;
+    }
+
+    .btn-square-ghost:hover:not(:disabled) {
+      background: var(--hairline-soft);
+      border-color: var(--faint);
+    }
+
+    .btn-square-ghost.btn-danger-hover:hover:not(:disabled) {
+      border-color: var(--error);
+      color: var(--error);
+    }
+
+    button:disabled {
+      opacity: 0.38;
+      cursor: not-allowed;
+    }
+
+    /* ---------------------------------------------------- CONTENT CANVAS */
+    main.content-canvas {
+      padding: 24px;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Tab View Switcher */
+    .tab-view {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .tab-view.active-view {
+      display: flex;
+    }
+
+    /* Geist Cards */
+    .geist-card {
+      background: var(--canvas-elevated);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-md);
+      padding: 20px;
+      box-shadow: var(--shadow-whisper);
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.4px;
+      color: var(--ink);
+    }
+
+    .eyebrow-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--mute);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* KPI Summary Row */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    @media (max-width: 900px) {
+      .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .kpi-stat-box {
+      background: var(--canvas-elevated);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-md);
+      padding: 16px;
+      box-shadow: var(--shadow-whisper);
+    }
+
+    .kpi-stat-box .kpi-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--mute);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+
+    .kpi-stat-box .kpi-value {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: -1.2px;
+      line-height: 1;
+      font-feature-settings: "tnum";
+    }
+
+    .kpi-stat-box.kpi-alert .kpi-value {
+      color: var(--error);
+    }
+
+    /* Viewport Cinema Frame */
+    .monitoring-grid {
+      display: grid;
+      grid-template-columns: 1.7fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 1040px) {
+      .monitoring-grid { grid-template-columns: 1fr; }
+    }
+
+    .viewport-frame {
+      position: relative;
+      background: #000;
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-md);
+      overflow: hidden;
+      aspect-ratio: 16 / 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #video-element {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .viewport-hud {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .hud-pill {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: rgba(23, 23, 23, 0.85);
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: var(--rounded-sm);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hud-pill.hud-live {
+      border-color: rgba(238, 0, 0, 0.4);
+      background: rgba(238, 0, 0, 0.2);
+      color: #ff8080;
+    }
+
+    /* Event Feed List */
+    .event-feed-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 310px;
+      overflow-y: auto;
+    }
+
+    .feed-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-sm);
+      background: var(--canvas-elevated);
+      border-left: 3px solid var(--hairline);
+      transition: border-color 120ms ease;
+    }
+
+    .feed-card.card-fall {
+      border-left-color: var(--error);
+      background: #fffafa;
+    }
+
+    .feed-card.card-stand {
+      border-left-color: var(--success);
+      background: #f8fdf9;
+    }
+
+    .feed-thumb {
+      width: 60px;
+      height: 40px;
+      border-radius: var(--rounded-sm);
+      object-fit: cover;
+      background: #000;
+      border: 1px solid var(--hairline);
+      flex-shrink: 0;
+      cursor: zoom-in;
+    }
+
+    .feed-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .feed-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-fall .feed-title { color: var(--error); }
+    .card-stand .feed-title { color: var(--success); }
+
+    .feed-meta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--mute);
+    }
+
+    /* Code Terminal */
+    .terminal-panel {
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-md);
+      background: var(--canvas-elevated);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 200px;
+    }
+
+    .terminal-header {
+      background: var(--canvas);
+      border-bottom: 1px solid var(--hairline);
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--mute);
+    }
+
+    #terminal-stream {
+      flex: 1;
+      padding: 10px 12px;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      line-height: 1.5;
+      color: var(--ink);
+      overflow-y: auto;
+      white-space: pre-wrap;
+      background: #fff;
+    }
+
+    #terminal-stream .warn { color: var(--warning-deep); }
+    #terminal-stream .err { color: var(--error); }
+    #terminal-stream .info { color: var(--link); }
+
+    /* ---------------------------------------------------- TABLES */
+    .table-card {
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-md);
+      overflow-x: auto;
+      background: var(--canvas-elevated);
+    }
+
+    table.geist-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    table.geist-table th {
+      background: var(--canvas);
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--mute);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--hairline);
+    }
+
+    table.geist-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--hairline);
+      color: var(--body);
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+    }
+
+    table.geist-table tr:hover td {
+      background: var(--hairline-soft);
+    }
+
+    /* Form Controls from Design.md */
+    input[type="text"], input[type="number"], select {
+      background: var(--canvas-elevated);
+      color: var(--ink);
+      border: 1px solid var(--hairline);
+      font-family: var(--font-geist);
+      font-size: 13.5px;
+      padding: 7px 10px;
+      border-radius: var(--rounded-sm);
+      outline: none;
+      transition: border-color 120ms ease;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--ink);
+    }
+
+    /* Modal Lightbox */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .modal-box {
+      background: var(--canvas-elevated);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-md);
+      box-shadow: var(--shadow-modal);
+      overflow: hidden;
+      max-width: 90vw;
+      max-height: 85vh;
+      position: relative;
+    }
+
+    .modal-box img {
+      max-width: 100%;
+      max-height: 85vh;
+      display: block;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--primary);
+      color: var(--on-primary);
+      width: 28px;
+      height: 28px;
+      border-radius: var(--rounded-sm);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    /* Helper styles */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+
+    .form-hint {
+      font-size: 12px;
+      color: var(--mute);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================== SIDEBAR ============================================== -->
+  <aside class="sidebar">
+    <!-- Brand / Workspace -->
+    <div class="sidebar-brand">
+      <svg class="vercel-triangle" viewBox="0 0 76 65" fill="currentColor">
+        <path d="M37.5274 0L75.0548 65H0L37.5274 0Z" />
+      </svg>
+      <div>
+        <div class="brand-title">Bottle Fall Vision</div>
+      </div>
+      <span class="version-tag">Geist</span>
+    </div>
+
+    <!-- Navigation List -->
+    <nav class="sidebar-nav">
+      <!-- Operator / Operational Section -->
+      <div>
+        <div class="nav-section-label">Operator</div>
+        <ul class="nav-list">
+          <li>
+            <button class="nav-item-btn active" onclick="navigateTab('tab-monitoring', this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+              Live Monitoring
+            </button>
+          </li>
+          <li>
+            <button class="nav-item-btn" onclick="navigateTab('tab-history', this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              Riwayat Kejadian
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Administrator Section -->
+      <div id="admin-sidebar-section">
+        <div class="nav-section-label">Administrator</div>
+        <ul class="nav-list">
+          <li>
+            <button class="nav-item-btn" onclick="navigateTab('tab-calibration', this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+              Kalibrasi AI & Garis
+              <span class="admin-pill-badge">Admin</span>
+            </button>
+          </li>
+          <li>
+            <button class="nav-item-btn" onclick="navigateTab('tab-sources', this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Kamera & File Video
+              <span class="admin-pill-badge">Admin</span>
+            </button>
+          </li>
+          <li>
+            <button class="nav-item-btn" onclick="navigateTab('tab-access', this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Hak Akses (RBAC)
+              <span class="admin-pill-badge">Admin</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Sidebar Bottom / User Role Profile -->
+    <div class="sidebar-footer">
+      <div class="user-profile-row">
+        <div class="user-avatar-wrap">
+          <div class="user-avatar" id="avatar-initials">{{ user.initials if user else 'AD' }}</div>
+          <div class="user-info-text">
+            <span class="user-name" id="user-display-name">{{ user.name if user else 'System Administrator' }}</span>
+            <span class="user-role-tag" id="user-role-badge">ROLE: {{ user.role if user else 'ADMIN' }}</span>
+          </div>
+        </div>
+      </div>
+      <a href="/logout" class="signout-btn" id="btn-logout" title="Keluar dari sesi console">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span>Keluar (Sign Out)</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- ============================================== MAIN APP VIEWPORT ============================================== -->
+  <div class="app-viewport">
+    <!-- Top Nav App Bar -->
+    <header class="top-app-bar">
+      <div class="breadcrumb-wrap">
+        <span class="breadcrumb-root">Console</span>
+        <span class="breadcrumb-divider">/</span>
+        <span class="breadcrumb-current" id="current-page-label">Live Monitoring</span>
+      </div>
+
+      <div class="top-telemetry-group">
+        <div id="chip-status" class="telemetry-chip">
+          <span class="chip-dot"></span>
+          <span id="txt-pipeline-status">STANDBY</span>
+        </div>
+
+        <div id="chip-db" class="telemetry-chip">
+          <span class="chip-dot"></span>
+          <span id="txt-db-status">MySQL: Memeriksa...</span>
+        </div>
+
+        <!-- Quick Start / Stop CTA -->
+        <button id="cta-start" class="btn-pill-primary" onclick="startDetection()">
+          Mulai Deteksi
+        </button>
+        <button id="cta-stop" class="btn-square-ghost btn-danger-hover" onclick="stopDetection()" disabled>
+          Hentikan
+        </button>
+      </div>
+    </header>
+
+    <!-- Content Canvas -->
+    <main class="content-canvas">
+
+      <!-- ==================== TAB 1: LIVE MONITORING ==================== -->
+      <section id="tab-monitoring" class="tab-view active-view">
+        <!-- KPI Row -->
+        <div class="kpi-row">
+          <div class="kpi-stat-box">
+            <div class="kpi-label">Frame Rate</div>
+            <div class="kpi-value" id="val-fps">0.0</div>
+          </div>
+          <div class="kpi-stat-box">
+            <div class="kpi-label">Objek Terdeteksi</div>
+            <div class="kpi-value" id="val-objects">0</div>
+          </div>
+          <div class="kpi-stat-box kpi-alert">
+            <div class="kpi-label">Kejadian Jatuh</div>
+            <div class="kpi-value" id="val-falls">0</div>
+          </div>
+          <div class="kpi-stat-box">
+            <div class="kpi-label">Total Frame</div>
+            <div class="kpi-value" id="val-frames">0</div>
+          </div>
+        </div>
+
+        <!-- Monitoring Split View -->
+        <div class="monitoring-grid">
+          <!-- Viewport Cinema Frame -->
+          <div class="geist-card" style="padding:14px; display:flex; flex-direction:column; gap:12px;">
+            <div class="card-head" style="margin-bottom:0;">
+              <span class="card-title">Live Video Viewport</span>
+              <span class="eyebrow-label" id="viewport-summary-eyebrow">Status: Memuat</span>
+            </div>
+
+            <div class="viewport-frame">
+              <img id="video-element" src="/video_feed" alt="Video Stream">
+              <div class="viewport-hud">
+                <div id="hud-live-tag" class="hud-pill hud-live" style="display:none;">
+                  ● LIVE DETECTION
+                </div>
+                <div class="hud-pill" id="hud-fps-pill">FPS: 0.0</div>
+              </div>
+            </div>
+
+            <!-- Quick Operator Switcher -->
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--canvas); padding:10px 14px; border-radius:var(--rounded-sm); border:1px solid var(--hairline);">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="eyebrow-label">Sumber:</span>
+                <select id="quick-source-kind" onchange="changeQuickSource(this.value)">
+                  <option value="video">File Rekaman Video</option>
+                  <option value="webcam">Webcam USB</option>
+                </select>
+                <select id="quick-video-select" style="max-width:240px;"></select>
+                <input id="quick-cam-idx" type="number" value="0" min="0" style="width:60px; display:none;">
+              </div>
+              <div id="quick-status-msg" style="font-family:var(--font-mono); font-size:11.5px; color:var(--mute);"></div>
+            </div>
+          </div>
+
+          <!-- Activity Feed & Mini Terminal -->
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            <div class="geist-card" style="padding:16px; flex:1; display:flex; flex-direction:column;">
+              <div class="card-head">
+                <span class="card-title">Feed Kejadian Terkini</span>
+                <span class="eyebrow-label" id="session-count-label">0 Kejadian</span>
+              </div>
+              <div class="event-feed-list" id="live-feed-box">
+                <div style="color:var(--mute); font-size:12px; text-align:center; padding:30px 0;">
+                  Menunggu deteksi status (berdiri/jatuh)...
+                </div>
+              </div>
+            </div>
+
+            <!-- Monospace Engine Terminal -->
+            <div class="terminal-panel">
+              <div class="terminal-header">
+                <span>PIPELINE ENGINE CONSOLE</span>
+                <span id="txt-log-lines">0 lines</span>
+              </div>
+              <div id="terminal-stream"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 2: RIWAYAT KEJADIAN (DATABASE) ==================== -->
+      <section id="tab-history" class="tab-view">
+        <div class="geist-card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Riwayat Kejadian (MySQL Database)</div>
+              <div class="form-hint">Daftar kejadian botol jatuh dan berdiri yang tersimpan secara permanen.</div>
+            </div>
+            <button class="btn-square-ghost" onclick="fetchHistory()">
+              Segarkan Data
+            </button>
+          </div>
+
+          <div style="display:flex; gap:10px; margin-bottom:14px;">
+            <select id="filter-type" onchange="fetchHistory()">
+              <option value="">Semua Tipe Kejadian</option>
+              <option value="BOTOL_JATUH">Hanya BOTOL_JATUH</option>
+              <option value="BOTOL_KEMBALI_BERDIRI">Hanya BOTOL_KEMBALI_BERDIRI</option>
+            </select>
+            <select id="filter-days" onchange="fetchHistory()">
+              <option value="">Seluruh Waktu</option>
+              <option value="1">24 Jam Terakhir</option>
+              <option value="7">7 Hari Terakhir</option>
+            </select>
+          </div>
+
+          <div class="table-card">
+            <table class="geist-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Waktu Kejadian</th>
+                  <th>Tipe Event</th>
+                  <th>Track ID</th>
+                  <th>Akurasi</th>
+                  <th>Rasio (h/w)</th>
+                  <th>Bukti Snapshot</th>
+                </tr>
+              </thead>
+              <tbody id="history-tbody">
+                <tr><td colspan="7" style="text-align:center; padding:20px; color:var(--mute);">Memuat data dari database MySQL...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 3: KALIBRASI AI & GARIS (ADMIN) ==================== -->
+      <section id="tab-calibration" class="tab-view">
+        <div class="geist-card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Kalibrasi Sensitivitas & Garis Jatuh Bebas</div>
+              <div class="form-hint">Pengaturan parameter deteksi dan kinematika jatuh dari ketinggian. Khusus Administrator.</div>
+            </div>
+            <button class="btn-pill-primary" onclick="saveCalibration()">Simpan Konfigurasi</button>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+            <div class="form-group">
+              <label>Batas Ketinggian Virtual / Virtual Drop Line (Y coordinate)</label>
+              <input type="number" id="cfg-virtual-line" placeholder="Contoh: 300" min="0">
+              <span class="form-hint">Koordinat pixel horizontal. Botol yang melintasi garis ini dari atas ke bawah dianggap jatuh. Kosongkan untuk menonaktifkan garis.</span>
+            </div>
+
+            <div class="form-group">
+              <label>Kecepatan Minimum Jatuh Bebas (Min Downward Speed px/frame)</label>
+              <input type="number" id="cfg-speed" step="0.5" value="8.0" min="1">
+              <span class="form-hint">Threshold kecepatan vertikal (Vy) ke bawah untuk mengklasifikasikan botol jatuh bebas.</span>
+            </div>
+
+            <div class="form-group">
+              <label>Jarak Penurunan Vertikal Minimum (Min Downward Drop px)</label>
+              <input type="number" id="cfg-drop" step="5" value="60.0" min="10">
+              <span class="form-hint">Total jarak perpindahan vertikal (ΔY) ke bawah yang diperlukan untuk konfirmasi jatuh.</span>
+            </div>
+
+            <div class="form-group">
+              <label>Model YOLO Weights</label>
+              <select id="cfg-model">
+                <option value="yolov8n.pt">yolov8n.pt (Lightweight - Tercepat di CPU)</option>
+                <option value="yolov8s.pt">yolov8s.pt (Small - Lebih Akurat untuk Botol Kaca)</option>
+              </select>
+              <span class="form-hint">Model YOLOv8 yang dimuat saat pipeline inisialisasi.</span>
+            </div>
+
+            <div class="form-group">
+              <label>Confidence Threshold</label>
+              <input type="number" id="cfg-conf" step="0.05" value="0.35" min="0.1" max="1.0">
+              <span class="form-hint">Batas confidence deteksi minimum agar botol dihitung.</span>
+            </div>
+
+            <div class="form-group">
+              <label>Rasio Jatuh / Rebah (Fall Ratio h/w)</label>
+              <input type="number" id="cfg-fall-ratio" step="0.05" value="0.95" min="0.1">
+              <span class="form-hint">Rasio tinggi/lebar bounding box ≤ nilai ini diklasifikasikan sebagai rebah di permukaan.</span>
+            </div>
+          </div>
+          <div id="calibration-save-msg" style="font-family:var(--font-mono); font-size:12px; margin-top:14px; min-height:16px;"></div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 4: KAMERA & FILE VIDEO (ADMIN) ==================== -->
+      <section id="tab-sources" class="tab-view">
+        <div class="geist-card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Manajemen Kamera & Berkas Video</div>
+              <div class="form-hint">Kelola file video masukan untuk evaluasi model atau konfigurasi input webcam.</div>
+            </div>
+          </div>
+
+          <!-- Video File Upload Box -->
+          <div style="border:1px dashed var(--hairline); padding:24px; border-radius:var(--rounded-md); background:var(--canvas); text-align:center; display:flex; flex-direction:column; align-items:center; gap:10px;">
+            <svg width="32" height="32" fill="none" stroke="var(--mute)" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <div>
+              <div style="font-weight:600; color:var(--ink);">Unggah Video Baru</div>
+              <div class="form-hint">Format didukung: .mp4, .avi, .mov, .mkv (Maks 500 MB)</div>
+            </div>
+            <button class="btn-square-ghost" onclick="document.getElementById('admin-file-upload').click()">Pilih Berkas</button>
+            <input id="admin-file-upload" type="file" accept=".mp4,.avi,.mov,.mkv" style="display:none;" onchange="handleFileUpload(this)">
+            <div id="upload-status-label" style="font-family:var(--font-mono); font-size:12px; color:var(--mute);"></div>
+          </div>
+
+          <!-- Video Files List -->
+          <div style="margin-top:20px;">
+            <div class="eyebrow-label" style="margin-bottom:10px;">Daftar Video Tersedia di Sistem</div>
+            <div class="table-card">
+              <table class="geist-table">
+                <thead>
+                  <tr>
+                    <th>Nama Berkas</th>
+                    <th>Ukuran</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="video-list-tbody">
+                  <tr><td colspan="3" style="text-align:center; padding:16px; color:var(--mute);">Memuat daftar video...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 5: HAK AKSES & RBAC (ADMIN) ==================== -->
+      <section id="tab-access" class="tab-view">
+        <div class="geist-card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Matriks Hak Akses & Peran Pengguna (RBAC)</div>
+              <div class="form-hint">Pemisahan fungsionalitas antara peran Operator (User Biasa) dan Administrator.</div>
+            </div>
+          </div>
+
+          <div class="table-card">
+            <table class="geist-table">
+              <thead>
+                <tr>
+                  <th>Modul / Fitur</th>
+                  <th>Operator (User Biasa)</th>
+                  <th>Administrator</th>
+                  <th>Keterangan Keamanan</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Live Stream & Telemetri Real-time</td>
+                  <td><span style="color:var(--success);">✓ Diizinkan</span></td>
+                  <td><span style="color:var(--success);">✓ Diizinkan</span></td>
+                  <td>Akses pemantauan visual tanpa mengubah konfigurasi.</td>
+                </tr>
+                <tr>
+                  <td>Riwayat Kejadian & Snapshot</td>
+                  <td><span style="color:var(--success);">✓ Diizinkan</span></td>
+                  <td><span style="color:var(--success);">✓ Diizinkan</span></td>
+                  <td>Pencarian dan peninjauan bukti kejadian jatuh.</td>
+                </tr>
+                <tr>
+                  <td>Mulai / Hentikan Pipeline Deteksi</td>
+                  <td><span style="color:var(--mute);">Diizinkan Cepat</span></td>
+                  <td><span style="color:var(--success);">✓ Penuh</span></td>
+                  <td>Pengendalian eksekusi proses computer vision.</td>
+                </tr>
+                <tr>
+                  <td>Kalibrasi Garis Ketinggian & Sensitivitas</td>
+                  <td><span style="color:var(--error);">✕ Dikunci</span></td>
+                  <td><span style="color:var(--success);">✓ Diizinkan</span></td>
+                  <td>Hanya Admin agar tidak mengubah ambang batas akurasi AI.</td>
+                </tr>
+                <tr>
+                  <td>Penggantian Model YOLO Weights</td>
+                  <td><span style="color:var(--error);">✕ Dikunci</span></td>
+                  <td><span style="color:var(--success);">✓ Diizinkan</span></td>
+                  <td>Membutuhkan akses komputasi perangkat keras.</td>
+                </tr>
+                <tr>
+                  <td>Unggah & Kelola Berkas Kamera</td>
+                  <td><span style="color:var(--error);">✕ Dikunci</span></td>
+                  <td><span style="color:var(--success);">✓ Diizinkan</span></td>
+                  <td>Penyimpanan file video masukan ke storage disk.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ============================================== IMAGE LIGHTBOX MODAL ============================================== -->
+  <div id="image-modal" class="modal-overlay" onclick="closeModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <img id="modal-img-element" src="" alt="Snapshot Detail">
+    </div>
+  </div>
+
+  <script>
+    // Injected Session from Flask
+    const sessionUser = {{ user | tojson if user else 'null' }};
+    let currentUserRole = (sessionUser && sessionUser.role) ? sessionUser.role : 'ADMIN';
+    let isPipelineRunning = false;
+    let cachedLogCount = 0;
+
+    // Tab Navigation
+    function navigateTab(tabId, btnElement) {
+      document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active-view'));
+      document.querySelectorAll('.nav-item-btn').forEach(b => b.classList.remove('active'));
+
+      const target = document.getElementById(tabId);
+      if (target) target.classList.add('active-view');
+      if (btnElement) btnElement.classList.add('active');
+
+      const titles = {
+        'tab-monitoring': 'Live Monitoring',
+        'tab-history': 'Riwayat Kejadian',
+        'tab-calibration': 'Kalibrasi AI & Garis Ketinggian',
+        'tab-sources': 'Kamera & File Video',
+        'tab-access': 'Hak Akses Pengguna (RBAC)',
+      };
+      document.getElementById('current-page-label').textContent = titles[tabId] || 'Console';
+    }
+
+    function applyRolePermissions() {
+      const isAdmin = (currentUserRole === 'ADMIN');
+      if (sessionUser) {
+        document.getElementById('user-display-name').textContent = sessionUser.name;
+        document.getElementById('user-role-badge').textContent = `ROLE: ${sessionUser.role}`;
+        document.getElementById('avatar-initials').textContent = sessionUser.initials;
+      }
+
+      const adminSection = document.getElementById('admin-sidebar-section');
+      if (adminSection) {
+        adminSection.style.display = isAdmin ? 'block' : 'none';
+      }
+
+      // If operator is on an admin tab, return to monitoring
+      const activeTab = document.querySelector('.tab-view.active-view');
+      if (!isAdmin && activeTab && (activeTab.id === 'tab-calibration' || activeTab.id === 'tab-sources' || activeTab.id === 'tab-access')) {
+        navigateTab('tab-monitoring', document.querySelector('.nav-item-btn'));
+      }
+    }
+
+    // Quick Source Switcher
+    function changeQuickSource(kind) {
+      document.getElementById('quick-video-select').style.display = (kind === 'video') ? 'inline-block' : 'none';
+      document.getElementById('quick-cam-idx').style.display = (kind === 'webcam') ? 'inline-block' : 'none';
+    }
+
+    // Load Video List
+    function fetchVideoFiles() {
+      fetch('/api/videos')
+        .then(r => r.json())
+        .then(res => {
+          const quickSel = document.getElementById('quick-video-select');
+          const tbody = document.getElementById('video-list-tbody');
+          quickSel.innerHTML = '';
+          tbody.innerHTML = '';
+
+          if (!res.videos || !res.videos.length) {
+            quickSel.innerHTML = '<option value="">(Belum ada video)</option>';
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:16px; color:var(--mute);">Belum ada video terunggah.</td></tr>';
+            return;
+          }
+
+          res.videos.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.path || v.name;
+            opt.textContent = `${v.name} (${v.size_mb} MB)`;
+            quickSel.appendChild(opt);
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td><strong>${v.name}</strong></td>
+              <td>${v.size_mb} MB</td>
+              <td>
+                <button class="btn-square-ghost" style="height:26px; padding:0 8px; font-size:11px;" onclick="selectVideoToRun('${v.path || v.name}')">Pilih untuk Deteksi</button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(() => {});
+    }
+
+    function selectVideoToRun(path) {
+      document.getElementById('quick-source-kind').value = 'video';
+      changeQuickSource('video');
+      document.getElementById('quick-video-select').value = path;
+      navigateTab('tab-monitoring', document.querySelectorAll('.nav-item-btn')[0]);
+      document.getElementById('quick-status-msg').textContent = `Dipilih: ${path}`;
+    }
+
+    // Start Detection
+    function startDetection() {
+      const kind = document.getElementById('quick-source-kind').value;
+      const payload = { source: kind };
+      if (kind === 'webcam') {
+        payload.camera_index = parseInt(document.getElementById('quick-cam-idx').value) || 0;
+      } else {
+        const vPath = document.getElementById('quick-video-select').value;
+        if (!vPath) { alert('Pilih berkas video terlebih dahulu.'); return; }
+        payload.video_path = vPath;
+      }
+
+      document.getElementById('quick-status-msg').textContent = 'Memulai proses...';
+
+      fetch('/api/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(r => r.json())
+      .then(res => {
+        if (!res.ok) {
+          alert(`Gagal: ${res.message}`);
+          document.getElementById('quick-status-msg').textContent = 'Gagal.';
+        } else {
+          document.getElementById('quick-status-msg').textContent = 'Deteksi aktif.';
+        }
+      })
+      .catch(() => {});
+    }
+
+    // Stop Detection
+    function stopDetection() {
+      fetch('/api/stop', { method: 'POST' })
+        .then(r => r.json())
+        .then(() => {
+          document.getElementById('quick-status-msg').textContent = 'Dihentikan.';
+        });
+    }
+
+    // Telemetry Polling
+    function pollTelemetry() {
+      fetch('/api/status')
+        .then(r => r.json())
+        .then(s => {
+          const fps = Number(s.fps || 0).toFixed(1);
+          document.getElementById('val-fps').textContent = fps;
+          document.getElementById('hud-fps-pill').textContent = `FPS: ${fps}`;
+          document.getElementById('val-objects').textContent = s.objects || 0;
+          document.getElementById('val-frames').textContent = s.frames || 0;
+
+          const runningNow = s.running;
+          if (runningNow !== isPipelineRunning) {
+            isPipelineRunning = runningNow;
+            document.getElementById('cta-start').disabled = isPipelineRunning;
+            document.getElementById('cta-stop').disabled = !isPipelineRunning;
+            document.getElementById('hud-live-tag').style.display = isPipelineRunning ? 'flex' : 'none';
+
+            const chip = document.getElementById('chip-status');
+            chip.classList.toggle('status-running', isPipelineRunning);
+            document.getElementById('txt-pipeline-status').textContent = isPipelineRunning ? 'RUNNING' : 'STANDBY';
+          }
+
+          // DB status
+          const dbChip = document.getElementById('chip-db');
+          if (s.db_status === 'connected') {
+            dbChip.style.color = '#047857';
+            document.getElementById('txt-db-status').textContent = 'MySQL: Connected';
+          } else if (s.db_status === 'disabled') {
+            dbChip.style.color = 'var(--mute)';
+            document.getElementById('txt-db-status').textContent = 'MySQL: Disabled';
+          } else {
+            dbChip.style.color = 'var(--error)';
+            document.getElementById('txt-db-status').textContent = 'MySQL: Offline';
+          }
+
+          // Track summary
+          const trackMap = s.statuses || {};
+          const pairs = Object.keys(trackMap).map(k => `ID ${k}: ${trackMap[k]}`);
+          document.getElementById('viewport-summary-eyebrow').textContent = pairs.length ? pairs.join(' · ') : 'Siaga';
+        })
+        .catch(() => {});
+    }
+
+    // Terminal Polling
+    function pollTerminal() {
+      fetch('/api/log')
+        .then(r => r.json())
+        .then(res => {
+          if (!res.lines || res.lines.length === cachedLogCount) return;
+          const stream = document.getElementById('terminal-stream');
+          stream.innerHTML = '';
+          res.lines.forEach(l => {
+            const div = document.createElement('div');
+            if (l.includes('ERROR') || l.includes('FAILED')) div.className = 'err';
+            else if (l.includes('TRANSISI') || l.includes('OFFLINE')) div.className = 'warn';
+            else if (l.includes('EVENT') || l.includes('dimuat')) div.className = 'info';
+            div.textContent = l;
+            stream.appendChild(div);
+          });
+          cachedLogCount = res.lines.length;
+          document.getElementById('txt-log-lines').textContent = `${cachedLogCount} lines`;
+          stream.scrollTop = stream.scrollHeight;
+        })
+        .catch(() => {});
+    }
+
+    // Results Polling
+    function pollResults() {
+      fetch('/api/results')
+        .then(r => r.json())
+        .then(res => {
+          if (!res.ok) return;
+          document.getElementById('val-falls').textContent = res.summary.falls || 0;
+          document.getElementById('session-count-label').textContent = `${res.summary.total_events || 0} Kejadian`;
+
+          const feed = document.getElementById('live-feed-box');
+          if (!res.events || !res.events.length) {
+            feed.innerHTML = '<div style="color:var(--mute); font-size:12px; text-align:center; padding:30px 0;">Menunggu deteksi status (berdiri/jatuh)...</div>';
+            return;
+          }
+
+          feed.innerHTML = '';
+          res.events.forEach(ev => {
+            const isFall = ev.event_type === 'BOTOL_JATUH';
+            const card = document.createElement('div');
+            card.className = `feed-card ${isFall ? 'card-fall' : 'card-stand'}`;
+
+            if (ev.snapshot_url) {
+              const img = document.createElement('img');
+              img.className = 'feed-thumb';
+              img.src = ev.snapshot_url;
+              img.onclick = () => openModal(ev.snapshot_url);
+              card.appendChild(img);
+            }
+
+            const body = document.createElement('div');
+            body.className = 'feed-body';
+
+            const title = document.createElement('div');
+            title.className = 'feed-title';
+            title.textContent = `${isFall ? '⚠' : '✓'} ${ev.event_type}`;
+
+            const meta = document.createElement('div');
+            meta.className = 'feed-meta';
+            meta.textContent = `Track ID ${ev.track_id} · Conf: ${Math.round(ev.confidence * 100)}% · ${ev.occurred_at}`;
+
+            body.appendChild(title);
+            body.appendChild(meta);
+            card.appendChild(body);
+            feed.appendChild(card);
+          });
+        })
+        .catch(() => {});
+    }
+
+    // History Table
+    function fetchHistory() {
+      const q = new URLSearchParams();
+      const type = document.getElementById('filter-type').value;
+      const days = document.getElementById('filter-days').value;
+      if (type) q.set('event_type', type);
+      if (days) q.set('days', days);
+
+      fetch('/api/events?' + q.toString())
+        .then(r => r.json())
+        .then(res => {
+          const tbody = document.getElementById('history-tbody');
+          if (!res.ok || !res.events || !res.events.length) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--mute);">${res.message || 'Belum ada kejadian tercatat di database.'}</td></tr>`;
+            return;
+          }
+          tbody.innerHTML = '';
+          res.events.forEach(r => {
+            const isFall = r.event_type === 'BOTOL_JATUH';
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td><strong>#${r.id}</strong></td>
+              <td>${r.occurred_at}</td>
+              <td><span style="font-weight:600; color:${isFall ? 'var(--error)' : 'var(--success)'}">${r.event_type}</span></td>
+              <td>ID ${r.track_id ?? '-'}</td>
+              <td>${Math.round(r.confidence * 100)}%</td>
+              <td>${r.orientation_ratio ? r.orientation_ratio.toFixed(2) : '-'}</td>
+              <td>
+                ${r.snapshot_url ? `<img src="${r.snapshot_url}" class="feed-thumb" style="width:42px; height:28px;" onclick="openModal('${r.snapshot_url}')">` : '<span style="color:var(--mute)">-</span>'}
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(() => {});
+    }
+
+    // Load Calibration Config
+    function loadCalibration() {
+      fetch('/api/config')
+        .then(r => r.json())
+        .then(res => {
+          if (!res.ok) return;
+          const c = res.config;
+          document.getElementById('cfg-virtual-line').value = c.virtual_line_y ?? '';
+          document.getElementById('cfg-speed').value = c.min_downward_speed_px ?? 8.0;
+          document.getElementById('cfg-drop').value = c.min_downward_drop_px ?? 60.0;
+          document.getElementById('cfg-fall-ratio').value = c.fall_ratio ?? 0.95;
+          document.getElementById('cfg-conf').value = c.conf_threshold ?? 0.35;
+          document.getElementById('cfg-model').value = c.model_path ?? 'yolov8n.pt';
+        })
+        .catch(() => {});
+    }
+
+    function saveCalibration() {
+      const payload = {
+        virtual_line_y: document.getElementById('cfg-virtual-line').value,
+        min_downward_speed_px: document.getElementById('cfg-speed').value,
+        min_downward_drop_px: document.getElementById('cfg-drop').value,
+        fall_ratio: document.getElementById('cfg-fall-ratio').value,
+        conf_threshold: document.getElementById('cfg-conf').value,
+        model_path: document.getElementById('cfg-model').value,
+      };
+
+      const msg = document.getElementById('calibration-save-msg');
+      msg.textContent = 'Menyimpan konfigurasi...';
+      msg.style.color = 'var(--link)';
+
+      fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(r => r.json())
+      .then(res => {
+        if (res.ok) {
+          msg.textContent = '✓ Konfigurasi berhasil disimpan dan diterapkan.';
+          msg.style.color = 'var(--success)';
+        } else {
+          msg.textContent = `Gagal: ${res.message}`;
+          msg.style.color = 'var(--error)';
+        }
+      })
+      .catch(() => {
+        msg.textContent = 'Kesalahan saat menyimpan.';
+        msg.style.color = 'var(--error)';
+      });
+    }
+
+    // File Upload Handler
+    function handleFileUpload(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const label = document.getElementById('upload-status-label');
+      label.textContent = `Mengunggah ${file.name} (${(file.size / 1e6).toFixed(1)} MB)...`;
+
+      const fd = new FormData();
+      fd.append('file', file);
+      fetch('/api/upload', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(res => {
+          if (res.ok) {
+            label.textContent = `✓ Berhasil diunggah: ${res.filename}`;
+            fetchVideoFiles();
+          } else {
+            label.textContent = `Gagal: ${res.message}`;
+          }
+        })
+        .catch(() => {
+          label.textContent = 'Gagal: koneksi terputus.';
+        });
+      input.value = '';
+    }
+
+    // Lightbox Modal
+    function openModal(src) {
+      document.getElementById('modal-img-element').src = src;
+      document.getElementById('image-modal').style.display = 'flex';
+    }
+    function closeModal() {
+      document.getElementById('image-modal').style.display = 'none';
+      document.getElementById('modal-img-element').src = '';
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    // Initializations
+    setInterval(pollTelemetry, 1000);
+    setInterval(pollTerminal, 600);
+    setInterval(pollResults, 1000);
+
+    pollTelemetry();
+    pollTerminal();
+    pollResults();
+    fetchHistory();
+    fetchVideoFiles();
+    loadCalibration();
+    applyRolePermissions();
+  </script>
+</body>
+</html>

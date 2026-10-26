@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# Secrets & local config
+.env
+
+# Model weights & artifacts
+*.pt
+models/*.pt
+
+# Generated media
+videos/output/*
+videos/snapshots/*
+!videos/output/.gitkeep
+!videos/snapshots/.gitkeep
+
+# Logs
+*.log
+logs/
+
+# Rule Push Exclusions & System files
+Agent.md
+AGENTS.md
+rule_push.md
+Design.md
+prompt.md
+.web_app.pid
+runs/
+.agents/
